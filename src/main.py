@@ -13,7 +13,7 @@ def main(page: ft.Page):
     )
     page.add(
         ft.SafeArea(
-            expand=True,
+            expand=False,
             content=ft.Container(
                 content=counter,
                 alignment=ft.Alignment.CENTER,
