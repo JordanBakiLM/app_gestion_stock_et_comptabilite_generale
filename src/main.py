@@ -1,6 +1,7 @@
 import flet as ft
 import style
 import base_de_donnee
+from views import gestion_mois,accueil,stock_initial, approvisionement, ventes, recapitulatif, benefice_brute
 
 base_de_donnees = base_de_donnee.SQLiteManager()
 
@@ -8,6 +9,16 @@ base_de_donnees = base_de_donnee.SQLiteManager()
 def main(page: ft.Page):
     page.title = "Salcom Compta"
     page.padding = 0
+
+    page.window = ft.Window(
+        width=1265,
+        min_width=1265,
+        height=700,
+        min_height=700,
+        
+    )
+
+    # page.
 
     page.fonts = {
         "Montserrat" : "/police/Montserrat.ttf"
@@ -21,6 +32,20 @@ def main(page: ft.Page):
     
     base_de_donnees.creation_table()
 
+    style_clic_1 = ft.TextStyle(
+        font_family='Montserrat',
+        size=18,
+        weight=ft.FontWeight.W_900,
+        color=ft.Colors.ON_PRIMARY
+    )
+
+    def style_icon_clic_1(ic:ft.IconData):
+        return ft.Icon(
+            ic,
+            color=ft.Colors.ON_PRIMARY,
+            size=30
+        )
+    
     def changer_theme(e):
         if page.theme_mode == ft.ThemeMode.LIGHT:
             page.theme_mode = ft.ThemeMode.DARK
@@ -77,97 +102,103 @@ def main(page: ft.Page):
 
     def clic_btn_menu(e,indice_btn:int):
         style_defaut_btn()
-        style_clic_1 = ft.TextStyle(
-            font_family='Montserrat',
-            size=18,
-            weight=ft.FontWeight.W_900,
-            color=ft.Colors.ON_PRIMARY
-        )
-        def style_icon_clic_1(ic:ft.IconData):
-            return ft.Icon(
-                ic,
-                color=ft.Colors.ON_PRIMARY,
-                size=30
-            )
+        mois_travail = base_de_donnees.get_mois_travail()
+        if mois_travail == -1:
+            if indice_btn != 8:
+                page.show_dialog(
+                    ft.AlertDialog(
+                        title="Erreur",
+                        content=ft.Text(
+                            value="Veuilez d'abord enrégistrer un mois de travail"
+                        )
+                    )
+                )
+                current_expanded["active"] = None
+                container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
+                container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
 
-        if indice_btn == 1:
-            current_expanded["active"] = None
-            container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
-            container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
+                container_gestion_mois.content.title.style=style_clic_1
+                container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.CALENDAR_MONTH)
+                container_principal.content = gestion_mois.gestion_mois(base_de_donnees)
+        else:
+            if indice_btn == 1:
+                current_expanded["active"] = None
+                container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
+                container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
 
-            container_home.content.title.style=style_clic_1
-            container_home.content.leading = style_icon_clic_1(ft.Icons.HOME_ROUNDED)
-            
-            container_principal.content = ft.Text("Acceuil")
-        elif indice_btn == 2:
-            container_gestion_de_stock.content.title.style=style_clic_1
-            container_gestion_de_stock.content.leading = style_icon_clic_1(ft.Icons.INVENTORY)
-            
-            container_gestion_de_stock.content.controls[0].title.style.color = ft.Colors.ON_PRIMARY
-            container_gestion_de_stock.content.controls[0].title.style.weight = ft.FontWeight.W_600
-            container_gestion_de_stock.content.icon_color=ft.Colors.ON_PRIMARY
-            container_gestion_de_stock.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
+                container_home.content.title.style=style_clic_1
+                container_home.content.leading = style_icon_clic_1(ft.Icons.HOME_ROUNDED)
+                
+                container_principal.content = accueil.accueil(base_de_donnees,mois_travail)
+            elif indice_btn == 2:
+                container_gestion_de_stock.content.title.style=style_clic_1
+                container_gestion_de_stock.content.leading = style_icon_clic_1(ft.Icons.INVENTORY)
+                
+                container_gestion_de_stock.content.controls[0].title.style.color = ft.Colors.ON_PRIMARY
+                container_gestion_de_stock.content.controls[0].title.style.weight = ft.FontWeight.W_600
+                container_gestion_de_stock.content.icon_color=ft.Colors.ON_PRIMARY
+                container_gestion_de_stock.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
 
 
-            container_principal.content = ft.Text("S. initial")
-        elif indice_btn == 3:
-            container_gestion_de_stock.content.title.style=style_clic_1
-            container_gestion_de_stock.content.leading = style_icon_clic_1(ft.Icons.INVENTORY)
-            
-            container_gestion_de_stock.content.controls[1].title.style.color = ft.Colors.ON_PRIMARY
-            container_gestion_de_stock.content.controls[1].title.style.weight = ft.FontWeight.W_600
-            container_gestion_de_stock.content.icon_color=ft.Colors.ON_PRIMARY
-            container_gestion_de_stock.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
-            
-            container_principal.content = ft.Text("APPRO")
-        elif indice_btn == 4:
-            container_gestion_de_stock.content.title.style=style_clic_1
-            container_gestion_de_stock.content.leading = style_icon_clic_1(ft.Icons.INVENTORY)
-            
-            container_gestion_de_stock.content.controls[2].title.style.color = ft.Colors.ON_PRIMARY
-            container_gestion_de_stock.content.controls[2].title.style.weight = ft.FontWeight.W_600
-            container_gestion_de_stock.content.icon_color=ft.Colors.ON_PRIMARY
-            container_gestion_de_stock.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
-            
-            container_principal.content = ft.Text("VENTES")
-        elif indice_btn == 5:
-            container_gestion_de_stock.content.title.style=style_clic_1
-            container_gestion_de_stock.content.leading = style_icon_clic_1(ft.Icons.INVENTORY)
-            
-            container_gestion_de_stock.content.controls[3].title.style.color = ft.Colors.ON_PRIMARY
-            container_gestion_de_stock.content.controls[3].title.style.weight = ft.FontWeight.W_600
-            container_gestion_de_stock.content.icon_color=ft.Colors.ON_PRIMARY
-            container_gestion_de_stock.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
-            
-            container_principal.content = ft.Text("RECAP")
-        elif indice_btn == 6:
-            container_comptabilite.content.title.style=style_clic_1
-            container_comptabilite.content.leading = style_icon_clic_1(ft.Icons.ACCOUNT_BALANCE)
+                container_principal.content = stock_initial.stock_initial(base_de_donnees,mois_travail)
+            elif indice_btn == 3:
+                container_gestion_de_stock.content.title.style=style_clic_1
+                container_gestion_de_stock.content.leading = style_icon_clic_1(ft.Icons.INVENTORY)
+                
+                container_gestion_de_stock.content.controls[1].title.style.color = ft.Colors.ON_PRIMARY
+                container_gestion_de_stock.content.controls[1].title.style.weight = ft.FontWeight.W_600
+                container_gestion_de_stock.content.icon_color=ft.Colors.ON_PRIMARY
+                container_gestion_de_stock.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
+                
+                container_principal.content = approvisionement.approvisionement(base_de_donnees,mois_travail)
+            elif indice_btn == 4:
+                container_gestion_de_stock.content.title.style=style_clic_1
+                container_gestion_de_stock.content.leading = style_icon_clic_1(ft.Icons.INVENTORY)
+                
+                container_gestion_de_stock.content.controls[2].title.style.color = ft.Colors.ON_PRIMARY
+                container_gestion_de_stock.content.controls[2].title.style.weight = ft.FontWeight.W_600
+                container_gestion_de_stock.content.icon_color=ft.Colors.ON_PRIMARY
+                container_gestion_de_stock.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
+                
+                container_principal.content = ventes.ventes(base_de_donnees,mois_travail)
+            elif indice_btn == 5:
+                container_gestion_de_stock.content.title.style=style_clic_1
+                container_gestion_de_stock.content.leading = style_icon_clic_1(ft.Icons.INVENTORY)
+                
+                container_gestion_de_stock.content.controls[3].title.style.color = ft.Colors.ON_PRIMARY
+                container_gestion_de_stock.content.controls[3].title.style.weight = ft.FontWeight.W_600
+                container_gestion_de_stock.content.icon_color=ft.Colors.ON_PRIMARY
+                container_gestion_de_stock.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
+                
+                container_principal.content = recapitulatif.recupitulatif(base_de_donnees,mois_travail)
+            elif indice_btn == 6:
+                container_comptabilite.content.title.style=style_clic_1
+                container_comptabilite.content.leading = style_icon_clic_1(ft.Icons.ACCOUNT_BALANCE)
 
-            container_comptabilite.content.controls[0].title.style.color = ft.Colors.ON_PRIMARY
-            container_comptabilite.content.controls[0].title.style.weight = ft.FontWeight.W_600
-            container_comptabilite.content.icon_color=ft.Colors.ON_PRIMARY
-            container_comptabilite.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
-            
-            container_principal.content = ft.Text("BB")
-        elif indice_btn == 7:
-            container_comptabilite.content.title.style=style_clic_1
-            container_comptabilite.content.leading = style_icon_clic_1(ft.Icons.ACCOUNT_BALANCE)
+                container_comptabilite.content.controls[0].title.style.color = ft.Colors.ON_PRIMARY
+                container_comptabilite.content.controls[0].title.style.weight = ft.FontWeight.W_600
+                container_comptabilite.content.icon_color=ft.Colors.ON_PRIMARY
+                container_comptabilite.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
+                
+                container_principal.content = benefice_brute.benefice_brute(base_de_donnees,mois_travail)
+            elif indice_btn == 7:
+                container_comptabilite.content.title.style=style_clic_1
+                container_comptabilite.content.leading = style_icon_clic_1(ft.Icons.ACCOUNT_BALANCE)
 
-            container_comptabilite.content.controls[1].title.style.color = ft.Colors.ON_PRIMARY
-            container_comptabilite.content.controls[1].title.style.weight = ft.FontWeight.W_600
-            container_comptabilite.content.icon_color=ft.Colors.ON_PRIMARY
-            container_comptabilite.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
-            
-            container_principal.content = ft.Text("dettes")
-        elif indice_btn == 8:
-            current_expanded["active"] = None
-            container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
-            container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
+                container_comptabilite.content.controls[1].title.style.color = ft.Colors.ON_PRIMARY
+                container_comptabilite.content.controls[1].title.style.weight = ft.FontWeight.W_600
+                container_comptabilite.content.icon_color=ft.Colors.ON_PRIMARY
+                container_comptabilite.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
+                
+                container_principal.content = ft.Text("dettes")
+            elif indice_btn == 8:
+                current_expanded["active"] = None
+                container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
+                container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
 
-            container_gestion_mois.content.title.style=style_clic_1
-            container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.CALENDAR_MONTH)
-            container_principal.content = ft.Text("G. mois")
+                container_gestion_mois.content.title.style=style_clic_1
+                container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.CALENDAR_MONTH)
+                container_principal.content = gestion_mois.gestion_mois(base_de_donnees)
 
     current_expanded = {"active" : None}
     def logique_deroulement(e, menu:str):
@@ -405,16 +436,26 @@ def main(page: ft.Page):
         expand=True,
         padding=20
     )
+
+    mois_travail = base_de_donnees.get_mois_travail()
+    if mois_travail == -1:
+        container_gestion_mois.content.title.style=style_clic_1
+        container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.CALENDAR_MONTH)
+        container_principal.content = gestion_mois.gestion_mois(base_de_donnees)
+    else:
+        container_home.content.title.style=style_clic_1
+        container_home.content.leading = style_icon_clic_1(ft.Icons.HOME_ROUNDED)
+        
+        container_principal.content = accueil.accueil(base_de_donnees,mois_travail)
     
     page.add(
         ft.Row(
             [
                 bloc_lateral,
-                ft.VerticalDivider(width=1),
                 container_principal
-                # ft.Column([ft.Text("Contenu de l'application")], expand=True)
             ],
-            expand=True
+            expand=True,
+            spacing=0
         )
     )
 

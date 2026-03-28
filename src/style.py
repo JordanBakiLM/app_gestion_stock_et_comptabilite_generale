@@ -11,7 +11,7 @@ theme_clair = ft.Theme(
         on_primary = "#0DBBF6",
         secondary_container = '#EFF3F9', #fond total
         secondary = '#000000', #ecriture
-        surface = "#FFFFFF" #fond des elements
+        surface = "#DFDFDF" #fond des elements
     )
 )
 
