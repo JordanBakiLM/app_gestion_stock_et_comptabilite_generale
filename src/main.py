@@ -1,7 +1,10 @@
+import os
+
 import flet as ft
 import style
 import base_de_donnee
-from views import gestion_mois,accueil,stock_initial, approvisionement, ventes, recapitulatif, benefice_brute
+from generateur_passe import Generateur_MDP
+from views import accueil, consultation, stock_initial, approvisionement, ventes, recapitulatif, benefice_brute, dettes
 
 base_de_donnees = base_de_donnee.SQLiteManager()
 
@@ -18,10 +21,22 @@ def main(page: ft.Page):
         
     )
 
+    dossier_utilisateur = os.path.expanduser("~")
+    chemin_fichier_pdf = os.path.join(dossier_utilisateur, "DocumentsSa", "suiviStock_CG", "doc_pdf")
+    os.makedirs(chemin_fichier_pdf, exist_ok=True)
+
+    Generateur_MDP.set_mot_de_passe()
+
+    for f in os.listdir(chemin_fichier_pdf):
+        try:
+            os.remove(f"{chemin_fichier_pdf}\\{f}")
+        except Exception as e:
+            print(e)
+
     # page.
 
     page.fonts = {
-        "Montserrat" : "/police/Montserrat.ttf"
+        "Montserrat" : "/police/Montserrat/Montserrat.ttf"
     }
 
     page.theme = style.theme_clair
@@ -72,9 +87,9 @@ def main(page: ft.Page):
             color="#FFFFFF"
         )
         
-        #ACCUEIL
-        container_home.content.title.style=style_defaut_1
-        container_home.content.leading = style_icon_defaut_1(ft.Icons.HOME_ROUNDED)
+        #CONSULTATION
+        container_consultation.content.title.style=style_defaut_1
+        container_consultation.content.leading = style_icon_defaut_1(ft.Icons.FIND_IN_PAGE)
 
         #STOCK
         container_gestion_de_stock.content.title.style=style_defaut_1
@@ -98,7 +113,7 @@ def main(page: ft.Page):
 
         #MOIS
         container_gestion_mois.content.title.style=style_defaut_1
-        container_gestion_mois.content.leading = style_icon_defaut_1(ft.Icons.CALENDAR_MONTH)
+        container_gestion_mois.content.leading = style_icon_defaut_1(ft.Icons.HOME_ROUNDED)
 
     def clic_btn_menu(e,indice_btn:int):
         style_defaut_btn()
@@ -118,18 +133,14 @@ def main(page: ft.Page):
                 container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
 
                 container_gestion_mois.content.title.style=style_clic_1
-                container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.CALENDAR_MONTH)
-                container_principal.content = gestion_mois.gestion_mois(base_de_donnees)
+                container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.HOME_ROUNDED)
+                container_principal.content = accueil.accueil(base_de_donnees)
         else:
             if indice_btn == 1:
-                current_expanded["active"] = None
-                container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
-                container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
-
-                container_home.content.title.style=style_clic_1
-                container_home.content.leading = style_icon_clic_1(ft.Icons.HOME_ROUNDED)
+                container_consultation.content.title.style=style_clic_1
+                container_consultation.content.leading = style_icon_clic_1(ft.Icons.FIND_IN_PAGE)
                 
-                container_principal.content = accueil.accueil(base_de_donnees,mois_travail)
+                container_principal.content = consultation.consultation(base_de_donnees,mois_travail)
             elif indice_btn == 2:
                 container_gestion_de_stock.content.title.style=style_clic_1
                 container_gestion_de_stock.content.leading = style_icon_clic_1(ft.Icons.INVENTORY)
@@ -139,6 +150,9 @@ def main(page: ft.Page):
                 container_gestion_de_stock.content.icon_color=ft.Colors.ON_PRIMARY
                 container_gestion_de_stock.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
 
+                current_expanded["active"] = None
+                container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
+                container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
 
                 container_principal.content = stock_initial.stock_initial(base_de_donnees,mois_travail)
             elif indice_btn == 3:
@@ -190,16 +204,16 @@ def main(page: ft.Page):
                 container_comptabilite.content.icon_color=ft.Colors.ON_PRIMARY
                 container_comptabilite.content.collapsed_icon_color=ft.Colors.ON_PRIMARY
                 
-                container_principal.content = ft.Text("dettes")
+                container_principal.content = dettes.dettes(base_de_donnees,mois_travail)
             elif indice_btn == 8:
-                current_expanded["active"] = None
-                container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
-                container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
-
                 container_gestion_mois.content.title.style=style_clic_1
-                container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.CALENDAR_MONTH)
-                container_principal.content = gestion_mois.gestion_mois(base_de_donnees)
+                container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.HOME_ROUNDED)
+                container_principal.content = accueil.accueil(base_de_donnees)
 
+            current_expanded["active"] = None
+            container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
+            container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
+    
     current_expanded = {"active" : None}
     def logique_deroulement(e, menu:str):
         if e.control.expanded == True:
@@ -217,25 +231,26 @@ def main(page: ft.Page):
             src="LOGO.png",
             width=100,
             height=100,
-            fit=ft.BoxFit.CONTAIN
+            fit=ft.BoxFit.CONTAIN,
         ),
         align=ft.Alignment.CENTER,
-        padding=ft.Padding.only(top=10,bottom=10),
+        padding=ft.Padding.only(top=10,bottom=10,left=5,right=5),
     )
     
-    container_home = ft.Container(
+    container_consultation = ft.Container(
         content = ft.ListTile(
             title=ft.Text(
-                "ACCUEIL",
+                "CONSULTATION",
                 style=ft.TextStyle(
                     font_family='Montserrat',
                     size=15,
                     weight=ft.FontWeight.W_500,
                     color="#FFFFFF"
                 ),
+                no_wrap=True
             ),
             leading=ft.Icon(
-                ft.Icons.HOME_ROUNDED,
+                ft.Icons.FIND_IN_PAGE,
                 color="#FFFFFF",
                 size=25
             ),
@@ -251,8 +266,8 @@ def main(page: ft.Page):
                 ft.Icons.INVENTORY,
                 color="#FFFFFF"
             ),
-            icon_color=ft.Colors.WHITE,
-            collapsed_icon_color="#FFFFFF",
+            icon_color=ft.Colors.TRANSPARENT,
+            collapsed_icon_color=ft.Colors.TRANSPARENT,
             
             bgcolor=ft.Colors.WHITE_10,
             title=ft.Text(
@@ -263,6 +278,7 @@ def main(page: ft.Page):
                     weight=ft.FontWeight.W_500,
                     color="#FFFFFF"
                 ),
+                no_wrap=True
             ),
             controls=[
                 ft.ListTile(
@@ -274,6 +290,7 @@ def main(page: ft.Page):
                             weight=ft.FontWeight.W_400,
                             color="#FFFFFF"
                         ),
+                        no_wrap=True
                     ),
                     on_click=lambda e : clic_btn_menu(e,2),
                     content_padding=ft.Padding(left=50)
@@ -287,6 +304,7 @@ def main(page: ft.Page):
                             weight=ft.FontWeight.W_400,
                             color="#FFFFFF"
                         ),
+                        no_wrap=True
                     ),
                     on_click=lambda e : clic_btn_menu(e,3),
                     content_padding=ft.Padding(left=50)
@@ -300,6 +318,7 @@ def main(page: ft.Page):
                             weight=ft.FontWeight.W_400,
                             color="#FFFFFF"
                         ),
+                        no_wrap=True
                     ),
                     on_click=lambda e : clic_btn_menu(e,4),
                     content_padding=ft.Padding(left=50)
@@ -313,6 +332,7 @@ def main(page: ft.Page):
                             weight=ft.FontWeight.W_400,
                             color="#FFFFFF"
                         ),
+                        no_wrap=True
                     ),
                     on_click=lambda e : clic_btn_menu(e,5),
                     content_padding=ft.Padding(left=50)
@@ -330,8 +350,8 @@ def main(page: ft.Page):
                 color="#FFFFFF",
                 size=25
             ),
-            icon_color=ft.Colors.WHITE,
-            collapsed_icon_color="#FFFFFF",
+            icon_color=ft.Colors.TRANSPARENT,
+            collapsed_icon_color=ft.Colors.TRANSPARENT,
             
             bgcolor=ft.Colors.WHITE_10,
             title=ft.Text(
@@ -342,6 +362,7 @@ def main(page: ft.Page):
                     weight=ft.FontWeight.W_500,
                     color="#FFFFFF"
                 ),
+                no_wrap=True
             ),
             controls=[
                 ft.ListTile(
@@ -353,6 +374,7 @@ def main(page: ft.Page):
                             weight=ft.FontWeight.W_400,
                             color="#FFFFFF"
                         ),
+                        no_wrap=True
                     ),
                     on_click=lambda e : clic_btn_menu(e,6),
                     content_padding=ft.Padding(left=50)
@@ -366,6 +388,7 @@ def main(page: ft.Page):
                             weight=ft.FontWeight.W_400,
                             color="#FFFFFF"
                         ),
+                        no_wrap=True
                     ),
                     on_click=lambda e : clic_btn_menu(e,7),
                     content_padding=ft.Padding(left=50)
@@ -378,16 +401,17 @@ def main(page: ft.Page):
     container_gestion_mois = ft.Container(
         content = ft.ListTile(
             title=ft.Text(
-                "G. MOIS",
+                "ACCUEIL",
                 style=ft.TextStyle(
                     font_family='Montserrat',
                     size=15,
                     weight=ft.FontWeight.W_500,
                     color="#FFFFFF"
                 ),
+                no_wrap=True
             ),
             leading=ft.Icon(
-                ft.Icons.CALENDAR_MONTH,
+                ft.Icons.HOME_ROUNDED,
                 color="#FFFFFF",
                 size=25
             ) ,
@@ -400,7 +424,7 @@ def main(page: ft.Page):
             icon = ft.Icons.LIGHT_MODE if theme_bd==0 else ft.Icons.DARK_MODE,
             on_click=changer_theme
         ),
-        padding=ft.Padding.only(bottom=20,left=20)
+        padding=ft.Padding.only(bottom=20,left=10)
     )
     
     bloc_logo_menu = ft.Container(
@@ -409,18 +433,42 @@ def main(page: ft.Page):
         content=ft.Column(
             controls=[
                 container_logo,
-                container_home,
+                container_gestion_mois,
                 container_gestion_de_stock,
                 container_comptabilite,
-                container_gestion_mois,
+                container_consultation,
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
     )
     
+    min_width_menu = 50
+    expand_width_menu = 270
+    
+    def agrandissement(e):
+        bloc_lateral.width = expand_width_menu if e.data == True else min_width_menu
+        bloc_lateral.update()
+
+        if e.data == False:
+            container_gestion_de_stock.content.collapsed_icon_color = ft.Colors.TRANSPARENT
+            container_comptabilite.content.collapsed_icon_color = ft.Colors.TRANSPARENT
+        else:
+            container_gestion_de_stock.content.collapsed_icon_color = container_gestion_de_stock.content.title.style.color
+            container_comptabilite.content.collapsed_icon_color = container_comptabilite.content.title.style.color
+
+        current_expanded["active"] = None
+        container_gestion_de_stock.content.expanded = (current_expanded["active"] == "stock")
+        container_comptabilite.content.expanded = (current_expanded["active"] == "compta")
+
+        container_comptabilite.update()
+        container_gestion_de_stock.update()     
+
     bloc_lateral = ft.Container(
         bgcolor=ft.Colors.PRIMARY,
-        width=270,
+        width=min_width_menu,
+        animate=ft.Animation(400,ft.AnimationCurve.DECELERATE),
+        clip_behavior=ft.ClipBehavior.HARD_EDGE,
+        on_hover=lambda e : agrandissement(e),
         content=ft.Column(
             controls=[
                 bloc_logo_menu,
@@ -434,30 +482,24 @@ def main(page: ft.Page):
         bgcolor=ft.Colors.SECONDARY_CONTAINER,
         alignment=ft.Alignment.TOP_CENTER,
         expand=True,
-        padding=20
+        padding=ft.Padding.only(left=90,top=20,bottom=20,right=20)
     )
 
-    mois_travail = base_de_donnees.get_mois_travail()
-    if mois_travail == -1:
-        container_gestion_mois.content.title.style=style_clic_1
-        container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.CALENDAR_MONTH)
-        container_principal.content = gestion_mois.gestion_mois(base_de_donnees)
-    else:
-        container_home.content.title.style=style_clic_1
-        container_home.content.leading = style_icon_clic_1(ft.Icons.HOME_ROUNDED)
-        
-        container_principal.content = accueil.accueil(base_de_donnees,mois_travail)
+    layout = ft.Stack(
+        controls = [
+            container_principal,
+            bloc_lateral
+        ],
+        expand=True,
+    )
+
+    container_gestion_mois.content.title.style=style_clic_1
+    container_gestion_mois.content.leading = style_icon_clic_1(ft.Icons.HOME_ROUNDED)
+    container_principal.content = accueil.accueil(base_de_donnees)
     
     page.add(
-        ft.Row(
-            [
-                bloc_lateral,
-                container_principal
-            ],
-            expand=True,
-            spacing=0
-        )
+        layout
     )
 
 
-ft.run(main)
+ft.run(main,view=ft.AppView.FLET_APP)
